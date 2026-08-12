@@ -1,0 +1,22 @@
+{
+  "design": "scipy.stats.qmc.LatinHypercube",
+  "trials_per_family": 16,
+  "selection_seed": 2026,
+  "space": {
+    "dropout": {
+      "type": "float",
+      "low": 0.0,
+      "high": 0.3
+    },
+    "hidden": {
+      "type": "int",
+      "low": 24,
+      "high": 96
+    },
+    "learning_rate": {
+      "type": "log_float",
+      "low": 0.0001,
+      "high": 0.003
+    }
+  }
+}

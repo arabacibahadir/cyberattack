@@ -1,0 +1,49 @@
+[paths]
+data_root = "../Multilayer Cyberattacks Identification and Classification Using Machine Learning in Internet of Blockchain  (IoBC)-Based Energy Networks"
+artifact_root = "../artifacts"
+
+[runtime]
+simulation_workers = 4
+precision = "auto"
+seed = 2026
+device = "auto"
+
+[simulation]
+steps = 900
+network = "cigre_mv"
+recycle = true
+storage_duration_hours = 2.0
+
+[robustness]
+enabled = true
+replicates_per_regime_shift = 3
+impairment_kinds = ["burst", "jitter"]
+
+[closed_loop]
+enabled = true
+step_seconds = 1.0
+policies = ["P0", "P1", "P2", "P3", "strongest_temporal_baseline", "candidate"]
+
+[training]
+max_epochs = 80
+min_epochs = 12
+patience = 8
+learning_rate = 0.001
+weight_decay = 0.0001
+checkpoint_every = 10
+final_refit = false
+hpo_space = "hpo_space.json"
+hpo_trials = 24
+family_hpo_gpu_hours = 4.0
+total_hpo_gpu_hours = 12.0
+batch_size = 32
+hpo_families = ["tcn", "tail_mil", "candidate"]
+fixed_mil_families = ["mil_mean", "mil_topk", "mil_attention"]
+final_seeds = [2026, 2027, 2028]
+
+[locked]
+manifest = "../artifacts/locked/manifest.json"
+guard = "../artifacts/locked/unlock.json"
+
+[reporting]
+figure_manifest = "figure_manifest.json"

@@ -1,0 +1,75 @@
+[paths]
+data_root = "../Multilayer Cyberattacks Identification and Classification Using Machine Learning in Internet of Blockchain  (IoBC)-Based Energy Networks"
+artifact_root = "../artifacts_q1_v2"
+
+[protocol]
+name = "q1_v2"
+version = "2.0.0"
+locked_v1_reuse_forbidden = true
+
+[runtime]
+simulation_workers = 4
+precision = "auto"
+seed = 2026
+device = "auto"
+
+[simulation]
+steps = 900
+network = "cigre_mv"
+recycle = true
+storage_duration_hours = 2.0
+step_seconds = 1.0
+
+[robustness]
+enabled = true
+replicates_per_regime_shift = 10
+impairment_kinds = ["burst", "jitter"]
+
+[closed_loop]
+enabled = true
+step_seconds = 1.0
+primary_endpoint = "overload_integral_percent_seconds"
+policies = ["P0", "P1", "P2", "P3", "strongest_temporal_baseline", "candidate"]
+
+[temporal]
+target_false_alarms_per_run = 0.10
+min_on_steps = 3
+min_off_steps = 3
+
+[training_gate]
+minimum_candidate_auprc_lift = 0.02
+
+[training]
+max_epochs = 60
+min_epochs = 12
+patience = 8
+learning_rate = 0.001
+weight_decay = 0.0001
+checkpoint_every = 10
+final_refit = false
+hpo_space = "hpo_space_q1_v2.json"
+hpo_trials = 16
+family_hpo_gpu_hours = 3.0
+total_hpo_gpu_hours = 10.0
+batch_size = 32
+hpo_families = ["tcn_physical", "tcn_cyber", "tcn_hybrid", "tail_mil_physical", "candidate_physical", "candidate"]
+fixed_mil_families = ["mil_mean_physical", "mil_topk_physical", "mil_attention_physical"]
+final_seeds = [2026, 2027, 2028]
+
+[training.feature_tier_by_family]
+tcn_physical = "physical"
+tcn_cyber = "cyber"
+tcn_hybrid = "hybrid"
+tail_mil_physical = "physical"
+candidate_physical = "physical"
+candidate = "hybrid"
+mil_mean_physical = "physical"
+mil_topk_physical = "physical"
+mil_attention_physical = "physical"
+
+[locked]
+manifest = "../artifacts_q1_v2/locked/manifest.json"
+guard = "../artifacts_q1_v2/locked/unlock.json"
+
+[reporting]
+figure_manifest = "figure_manifest.json"

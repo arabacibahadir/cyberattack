@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling>=1.28"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gridimpair"
+version = "0.1.0"
+description = "Leakage-aware paired counterfactual experiments for communication-impaired DER control"
+readme = "README.md"
+requires-python = "==3.11.*"
+dependencies = [
+  "numpy==2.3.5",
+  "pandas==2.3.3",
+  "scipy==1.16.3",
+  "scikit-learn==1.8.0",
+  "torch==2.13.0",
+  "pandapower==3.5.4",
+  "matplotlib==3.11.1",
+  "joblib==1.5.3",
+]
+
+[project.optional-dependencies]
+classical = [
+  "xgboost==3.2.0",
+  "aeon==1.5.0",
+  "numba==0.63.1",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.1.1",
+]
+
+[project.scripts]
+gridimpair = "gridimpair.runner:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gridimpair"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu130" }
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
