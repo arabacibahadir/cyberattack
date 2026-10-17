@@ -25,6 +25,9 @@ classical = [
   "aeon==1.5.0",
   "numba==0.63.1",
 ]
+energy = [
+  "nvidia-ml-py==13.615.71",
+]
 
 [dependency-groups]
 dev = [

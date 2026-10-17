@@ -18,6 +18,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, log_loss
 from torch.utils.data import DataLoader, TensorDataset
 
+from gridimpair import energy
 from gridimpair.config import AppConfig, TrainingConfig
 from gridimpair.contracts import stable_hash
 from gridimpair.evaluation.closed_loop import (
@@ -696,6 +697,8 @@ def _baseline_predictions(
     )
     rows: list[dict[str, Any]] = []
     availability: list[dict[str, str]] = []
+    cost_rows: list[dict[str, Any]] = []
+    fit_started = energy.snapshot()
     detectors = {
         "flatline": FlatlineDetector().fit(train_series, split="development"),
         "derivative": DerivativeEnergyDetector().fit(
@@ -707,8 +710,10 @@ def _baseline_predictions(
         values, development_mask & (labels == 0)
     )
     detectors["ridge_residual"] = ridge
+    cost_rows.append({"model": "rule_and_residual_detectors", "phase": "fit", **energy.delta(fit_started)})
     for name, detector in detectors.items():
         joblib.dump(detector, run_dir / f"{name}.joblib")
+        score_started = energy.snapshot()
         for index, case in enumerate(values):
             rows.append(
                 {
@@ -717,6 +722,8 @@ def _baseline_predictions(
                     "score": detector.score(case.T),
                 }
             )
+        cost_rows.append({"model": name, "phase": "score_all_runs", "runs": len(values), **energy.delta(score_started)})
+    watchdog_started = energy.snapshot()
     watchdog = AgeWatchdog(max_age=2.0).fit(
         np.concatenate(age_values[development_mask]), split="development"
     )
@@ -729,6 +736,7 @@ def _baseline_predictions(
                 "score": float(np.max(ages) > watchdog.max_age),
             }
         )
+    cost_rows.append({"model": "message_age_watchdog", "phase": "fit_and_score_all_runs", "runs": len(age_values), **energy.delta(watchdog_started)})
     for tier, tier_values in values_by_tier.items():
         for base_name, detector in (
             ("xgboost", XGBoostDetector()),
@@ -736,12 +744,15 @@ def _baseline_predictions(
         ):
             name = f"{base_name}_{tier}"
             try:
+                fit_started = energy.snapshot()
                 detector.fit(
                     tier_values[development_mask],
                     labels[development_mask],
                     split="development",
                 )
+                cost_rows.append({"model": name, "phase": "fit", "runs": int(np.sum(development_mask)), **energy.delta(fit_started)})
                 joblib.dump(detector, run_dir / f"{name}.joblib")
+                score_started = energy.snapshot()
                 for index, case in enumerate(tier_values):
                     rows.append(
                         {
@@ -750,6 +761,7 @@ def _baseline_predictions(
                             "score": detector.score(case),
                         }
                     )
+                cost_rows.append({"model": name, "phase": "score_all_runs", "runs": len(tier_values), **energy.delta(score_started)})
                 availability.append(
                     {"model": name, "feature_tier": tier, "status": "fitted"}
                 )
@@ -761,6 +773,7 @@ def _baseline_predictions(
                         "status": f"unavailable: {type(error).__name__}",
                     }
                 )
+    pd.DataFrame(cost_rows).to_csv(run_dir / "baseline_cost.csv", index=False)
     return rows, availability
 
 

@@ -11,6 +11,7 @@ from typing import Any, Iterable
 import torch
 from torch.nn import functional as F
 
+from gridimpair import energy
 from gridimpair.config import TrainingConfig
 from gridimpair.contracts import ModelOutput, stable_hash
 from gridimpair.train.checkpoints import (
@@ -166,6 +167,7 @@ def fit_model(
     completed = start_epoch - 1
     for epoch in range(start_epoch, train_config.max_epochs + 1):
         epoch_started = time.perf_counter()
+        energy_start = energy.snapshot()
         if device.type == "cuda":
             torch.cuda.reset_peak_memory_stats(device)
         train_loss = _run_epoch(
@@ -185,6 +187,9 @@ def fit_model(
             scaler=None,
         )
         scheduler.step()
+        if device.type == "cuda":
+            torch.cuda.synchronize(device)
+        epoch_cost = energy.delta(energy_start)
         improved = validation_loss < best_metric
         if improved:
             best_metric, best_epoch, stale_epochs = validation_loss, epoch, 0
@@ -202,6 +207,9 @@ def fit_model(
                 if device.type == "cuda"
                 else 0.0
             ),
+            "gpu_energy_j": epoch_cost["gpu_energy_j"],
+            "cpu_seconds": epoch_cost["cpu_seconds"],
+            "cpu_energy_j_est": epoch_cost["cpu_energy_j_est"],
         }
         _append_metrics(run_dir, row)
         payload = checkpoint_payload(

@@ -18,3 +18,8 @@ artifacts_q1_v2/pilot/
 artifacts_q1_v2/robustness/
 artifacts_q1_v2/closed_loop/
 artifacts_q1_v2/ledgers/*.sqlite
+
+# R1 analysis outputs and local working folders
+artifacts_q1_v2/
+revizyon_R1/
+_arsiv_eski/

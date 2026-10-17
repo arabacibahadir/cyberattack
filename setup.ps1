@@ -33,6 +33,7 @@ $SyncArguments = @("sync")
 if ($InstallClassical) {
     $SyncArguments += @("--extra", "classical")
 }
+$SyncArguments += @("--extra", "energy")
 python -m uv @SyncArguments
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
